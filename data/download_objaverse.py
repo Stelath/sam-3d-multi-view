@@ -5,6 +5,7 @@ import multiprocessing
 import argparse
 from pathlib import Path
 from manifest import Manifest, ObjectRecord
+import gc
 
 
 SUPPORTED_EXTS = ['.glb', '.gltf', '.obj', '.fbx', '.ply']
@@ -82,8 +83,13 @@ def main():
     # 1. Smithsonian Objects (Priority 1)
     smithsonian_objs = pd.DataFrame()
     if 'source' in annotations.columns:
-        smithsonian_objs = annotations[annotations['source'] == 'smithsonian']
+        # Create a copy to allow freeing the main annotations dataframe
+        smithsonian_objs = annotations[annotations['source'] == 'smithsonian'].copy()
         print(f"Found {len(smithsonian_objs)} Smithsonian objects.")
+    
+    # Free up memory - annotations is huge
+    del annotations
+    gc.collect()
     
     # 2. Objaverse++ High Quality Objects (Priority 2)
     print("Loading Objaverse++ metadata for high quality objects...")
